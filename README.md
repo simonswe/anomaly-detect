@@ -6,7 +6,7 @@
 
 ---
 
-## Option Chosen: Option 1 - Work with Government Data
+## Option 1 Chosen: Working with Government Data
 
 My project implements Option 1, creating a full-stack application to find anomalies in a public dataset.
 
@@ -36,8 +36,11 @@ In the context of these border crossings, an "anomaly" refers to a data value (a
     - Flags entries where the `Value`'s Z-score (number of standard deviations from the mean) exceeds a user-defined `Threshold` (default set to 3.0)
     - Useful for identifying statistically unusual highs or lows *relative* to the specific group being viewed
 
-3.  **...Complex...**:
-    - 
+3.  **Time Series (STL)**:
+    - Uses Seasonal-Trend decomposition using Loess (STL) to break down the time series (for the filtered data, grouped implicitly by the filters applied) into seasonal, trend, and residual components. Requires `statsmodels` library
+    - Analyzes the *residual* component, which represents the noise or remainder after removing seasonality and trend.
+    - Flags entries where the residual's Z-score exceeds a user-defined `Threshold`
+    - Useful for identifying points that are unusual even after accounting for predictable seasonal patterns and overall trends. Requires sufficient historical data (at least 2 full seasonal cycles, typically 25+ months for monthly data) for reliable decomposition
 
 ---
 
@@ -125,4 +128,23 @@ In the context of these border crossings, an "anomaly" refers to a data value (a
 
 ---
 
+## Unit Testing
 
+Unit tests have been added for the backend `AnomalyService` to verify the logic of the different anomaly detection methods
+
+-   **Location**: `backend/tests/test_anomaly_detector.py`
+-   **Coverage**: Tests include cases for:
+    -   Statistical method (outlier found, no outlier, zero std dev, insufficient data).
+    -   Out of Range method (below min, above max, both, none found, no limits provided).
+    -   Time Series STL method (outlier found, no outlier, insufficient data, missing/bad date column).
+    -   General edge cases (empty DataFrame, missing value column, all NaN values).
+
+-   **How to Run Tests**:
+    1.  Navigate to `backend` directory
+    2.  Ensure your Python venv is active
+    3.  Run the tests using:
+        ```
+        python -m unittest tests/test_anomaly_detector.py
+        ```
+        
+---

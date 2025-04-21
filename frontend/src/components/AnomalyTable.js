@@ -21,33 +21,55 @@ function AnomalyTable({ tableData = [], anomalyData = [], showOnlyAnomalies }) {
 
   const columns = useMemo(
     () => [
-       { header: 'Port Name', accessorKey: 'port_name', id: 'port_name', width: '10%' },
-       { header: 'State', accessorKey: 'state', id: 'state', width: '10%', cell: info => <div style={{ textAlign: 'center' }}>{info.getValue()}</div> },
-       { header: 'Border', accessorKey: 'border', id: 'border', width: '10%', cell: info => <div style={{ textAlign: 'center' }}>{info.getValue()}</div> },
-       { header: 'Date', accessorKey: 'date', id: 'date', width: '10%', cell: info => <div style={{ textAlign: 'center' }}>{info.getValue()}</div> },
-       { header: 'Measure', accessorKey: 'measure', id: 'measure', width: '15%' },
-       {
-           header: 'Value',
-           accessorKey: 'value',
-           id: 'value',
-           width: '5%',
-           cell: info => {
-             const value = info.getValue();
-             const formattedValue = (value !== null && value !== undefined)
-               ? parseInt(value, 10).toLocaleString()
-               : 'N/A';
-             return ( <div style={{ textAlign: 'right', paddingRight: '10px', fontWeight: 'bold' }}> {formattedValue} </div> );
-           },
-       },
-       { header: 'Latitude', accessorKey: 'latitude', id: 'latitude', width: '5%', cell: info => info.getValue()?.toFixed(3) },
-       { header: 'Longitude', accessorKey: 'longitude', id: 'longitude', width: '5%', cell: info => info.getValue()?.toFixed(3) },
-       {
-           header: 'Anomaly Info',
-           accessorFn: row => anomalyData.find(a => a.id === row.id)?.anomaly_reason || '',
-           id: 'anomaly_info',
-           width: '30%',
-           cell: info => <span style={{ color: 'red', fontSize: '0.9em' }}>{info.getValue()}</span>
-       }
+        { header: 'Port Name', accessorKey: 'port_name', id: 'port_name', width: '10%' },
+        { header: 'State', accessorKey: 'state', id: 'state', width: '10%', cell: info => <div style={{ textAlign: 'center' }}>{info.getValue()}</div> },
+        { header: 'Border', accessorKey: 'border', id: 'border', width: '10%', cell: info => <div style={{ textAlign: 'center' }}>{info.getValue()}</div> },
+        {
+            header: 'Date',
+            accessorKey: 'date',
+            id: 'date',
+            width: '10%', 
+            cell: info => {
+                const dateStr = info.getValue(); 
+                if (!dateStr) return ''; 
+
+                try {
+                    const dateObj = new Date(dateStr + 'T00:00:00Z');
+
+                    return dateObj.toLocaleDateString(undefined, {
+                        month: 'short',
+                        year: 'numeric',
+                        timeZone: 'UTC'
+                    });
+                } catch (e) {
+                    console.error("Error formatting date:", dateStr, e);
+                    return dateStr;
+                }
+            }
+        },
+        { header: 'Measure', accessorKey: 'measure', id: 'measure', width: '15%' },
+        {
+            header: 'Value',
+            accessorKey: 'value',
+            id: 'value',
+            width: '5%',
+            cell: info => {
+                const value = info.getValue();
+                const formattedValue = (value !== null && value !== undefined)
+                ? parseInt(value, 10).toLocaleString()
+                : 'N/A';
+                return ( <div style={{ textAlign: 'right', paddingRight: '10px', fontWeight: 'bold' }}> {formattedValue} </div> );
+            },
+        },
+        { header: 'Latitude', accessorKey: 'latitude', id: 'latitude', width: '5%', cell: info => info.getValue()?.toFixed(3) },
+        { header: 'Longitude', accessorKey: 'longitude', id: 'longitude', width: '5%', cell: info => info.getValue()?.toFixed(3) },
+        {
+            header: 'Anomaly Info',
+            accessorFn: row => anomalyData.find(a => a.id === row.id)?.anomaly_reason || '',
+            id: 'anomaly_info',
+            width: '30%',
+            cell: info => <span style={{ color: 'red', fontSize: '0.9em' }}>{info.getValue()}</span>
+        }
     ],
     [anomalyData] // Dep
   );

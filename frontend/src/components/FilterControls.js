@@ -116,11 +116,11 @@ function FilterControls({ onFiltersChange, initialFilters }) {
                </select>
             </div>
             <div>
-              <label htmlFor="date">Date (Mmm-YY):</label><br />
-              <select name="date" id="date" value={filters.date} onChange={handleChange}>
-                 {createOptions(options.dates, "Any Date")}
-              </select>
-            </div>
+                <label htmlFor="date">Date (YYYY-MM-DD):</label><br />
+                <select name="date" id="date" value={filters.date} onChange={handleChange}>
+                    {createOptions(options.dates, "Any Date")}
+                </select>
+              </div>
           </div>
 
           {/* Anomaly Settings */}
@@ -165,9 +165,11 @@ function FilterControls({ onFiltersChange, initialFilters }) {
                 </>
              )}
 
-             {filters.anomaly_type === 'statistical' && (
+             {(filters.anomaly_type === 'statistical' || filters.anomaly_type === 'time_series_stl') && (
                 <div>
-                    <label htmlFor="threshold">Threshold (Std Dev):</label><br />
+                    <label htmlFor="threshold">
+                        {filters.anomaly_type === 'statistical' ? 'Threshold (Std Dev):' : 'Residual Threshold (Std Dev):'}
+                    </label><br />
                     <input
                         type="number"
                         step="0.1"
@@ -177,7 +179,9 @@ function FilterControls({ onFiltersChange, initialFilters }) {
                         value={filters.threshold}
                         onChange={handleChange}
                         style={{ width: '80px' }}
-                        title="Z-score threshold for Statistical detection"
+                        title={filters.anomaly_type === 'statistical' ? 
+                            "Z-score threshold for Statistical detection" : 
+                            "Z-score threshold applied to STL residuals"}
                     />
                 </div>
              )}

@@ -100,11 +100,19 @@ def init_db():
             if col in df_to_insert.columns:
                 df_to_insert[col] = df_to_insert[col].astype('Int64')
 
+        if 'date' in df_to_insert.columns:
+            click.echo("Converting 'date' column format to 'YYYY-MM-DD'...")
+            date_dt_series = pd.to_datetime(df_to_insert['date'], format='%b %Y', errors='coerce')
+
+            # Format back to 'YYYY-MM-DD' string, NaT will become None/NaN here
+            df_to_insert['date'] = date_dt_series.dt.strftime('%Y-%m-%d')
+            click.echo("Successfully converted 'date' column format.")
+        else:
+             click.echo("Warning: 'date' column not found for format conversion.")
+
         df_to_insert = df_to_insert.where(pd.notnull(df_to_insert), None)
 
         click.echo("Cleaned numeric data and handled missing values.")
-
-
         click.echo("Inserting data into the database (this may take a moment)...")
 
         table_name = 'border_crossing_entry_data'

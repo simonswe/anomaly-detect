@@ -32,7 +32,7 @@ def get_data():
     state = request.args.get('state')
     border = request.args.get('border')
     measure = request.args.get('measure')
-    date = request.args.get('date') # 'Mmm-YY' format
+    date = request.args.get('date')
     port_code = request.args.get('port_code', type=int, default=None)
 
     query = 'SELECT * FROM border_crossing_entry_data WHERE 1=1'
@@ -66,7 +66,7 @@ def get_anomalies():
     """
     Fetches data based on filters and identifies anomalies based on selected type.
     Requires 'anomaly_type' parameter ('statistical' or 'out_of_range').
-    Uses 'threshold' for 'statistical', 'value_min'/'value_max' for 'out_of_range'.
+    Uses 'threshold' for 'statistical' & 'time_series_stl', 'value_min'/'value_max' for 'out_of_range'.
     """
     db = get_db()
     cursor = db.cursor()
@@ -77,8 +77,12 @@ def get_anomalies():
     min_value_param = request.args.get('value_min', type=float, default=None)
     max_value_param = request.args.get('value_max', type=float, default=None)
 
-    if anomaly_type not in ['statistical', 'out_of_range']:
-         return jsonify({"error": "Invalid 'anomaly_type'. Must be 'statistical' or 'out_of_range'."}), 400
+    seasonal_period = request.args.get('seasonal_period', type=int, default=12)
+
+    allowed_types = ['statistical', 'out_of_range', 'time_series_stl']
+
+    if anomaly_type not in allowed_types:
+         return jsonify({"error": f"Invalid 'anomaly_type'. Must be one of: {', '.join(allowed_types)}."}), 400
     
     if anomaly_type == 'out_of_range' and min_value_param is None and max_value_param is None:
          return jsonify({"error": "'out_of_range' requires at least 'value_min' or 'value_max' parameter."}), 400
@@ -101,6 +105,9 @@ def get_anomalies():
     if port_code is not None: query += ' AND port_code = ?'; params.append(port_code)
     query += ' AND value IS NOT NULL' # Need this to ensure validity for anomaly service
 
+    # Order chronologically for STL
+    query += ' ORDER BY date ASC'
+
     try:
         cursor.execute(query, params)
         rows = cursor.fetchall()
@@ -119,7 +126,8 @@ def get_anomalies():
             anomaly_type=anomaly_type,
             threshold=threshold,
             min_value=min_value_param,
-            max_value=max_value_param 
+            max_value=max_value_param,
+            seasonal_period=seasonal_period
         )
 
         anomalies_df = df_result[df_result['is_anomaly'] == True]
@@ -167,8 +175,8 @@ def get_filter_options():
         measures = cursor.fetchall()
         options['measures'] = [{'value': row['measure'], 'label': row['measure']} for row in measures]
 
-        # Dates (TODO: make chronological)
-        cursor.execute(f"SELECT DISTINCT date FROM {table} ORDER BY date")
+        # Dates (ISO makes chronological)
+        cursor.execute(f"SELECT DISTINCT date FROM {table} ORDER BY date ASC")
         dates = cursor.fetchall()
         options['dates'] = [{'value': row['date'], 'label': row['date']} for row in dates]
 
@@ -180,7 +188,8 @@ def get_filter_options():
         # Anomaly Types
         options['anomaly_types'] = [
             {'value': 'statistical', 'label': 'Statistical (Z-Score)'},
-            {'value': 'out_of_range', 'label': 'Out of Range (Min/Max)'}
+            {'value': 'out_of_range', 'label': 'Out of Range (Min/Max)'},
+            {'value': 'time_series_stl', 'label': 'Time Series (STL)'}
         ]
 
         return jsonify(options)
