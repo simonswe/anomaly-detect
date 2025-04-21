@@ -168,7 +168,7 @@ class AnomalyService:
 
                     # Assign reasons: Create a map from datetime index to reason string
                     relevant_z_scores = resid_z_scores.loc[anomaly_datetime_indices]
-                    reason_map = {dt: f"Time Series STL: Residual Z-score {z:.2f} exceeds threshold {threshold}"
+                    reason_map = {dt: f"Time Series STL: Residual Z-score exceeds threshold {threshold}"
                                   for dt, z in relevant_z_scores.items()}
 
                     # Apply reasons: map datetime index of anomalous_ts_rows to get correct reason string for each row
