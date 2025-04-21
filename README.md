@@ -99,7 +99,7 @@ This project addresses escalating test cases as follows:
 
 I added unit tests for the backend `AnomalyService` to verify the logic of all the different anomaly detection methods
 
--   **Location**: `backend/tests/test_anomaly_detector.py`
+-   **Location**: `backend/tests/test_anomaly_service.py`
 -   **Coverage**: Tests include cases for:
     -   Statistical method (outlier found, no outlier, zero std dev, insufficient data)
     -   Out of Range method (below min, above max, both, none found, no limits provided)
@@ -111,7 +111,7 @@ I added unit tests for the backend `AnomalyService` to verify the logic of all t
     2.  Ensure your Python venv is active
     3.  Run the tests using:
         ```
-        python -m unittest tests/test_anomaly_detector.py
+        python -m unittest tests/test_anomaly_service.py
         ```
         
 ---
